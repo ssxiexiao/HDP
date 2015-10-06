@@ -4,6 +4,16 @@ import random
 import numpy as np
 import csv
 
+def sample(p):
+    for i in range(len(p)):
+        if i > 0:
+            p[i] += p[i-1]
+    p[len(p)-1] = 1.0
+    t = random.random()
+    for i in range(len(p)):
+        if p[i] > t:
+            return i
+
 class UserInfo:
 
     def __init__(self):
@@ -58,8 +68,6 @@ class UserInfo:
     def getJ(self, j):
         return self.indice2Id[j]
 
-    def changeAttr(self, data):
-        return
 
 class ClusterInfo:
     
@@ -231,11 +239,11 @@ class HDP:
         beta = 0
         ga = self.gama
         for i in range(iter):
-            eta = np.random.beta(ga + 1, m);
-            kai = self.gama_a + K - 1;
-            beta = self.gama_b - math.log(eta);
+            eta = np.random.beta(ga + 1, m)
+            kai = self.gama_a + K - 1
+            beta = self.gama_b - math.log(eta)
             if random.random() < (kai / (kai + m * beta)):
-                kai += 1;
+                kai += 1
 
             ga = np.random.gamma(kai, 1/beta)       
         self.gama = ga
@@ -254,6 +262,8 @@ for line in reader:
         time = line[0]
         id = line[1]
         line = line[2:]
+        for i in range(len(line)):
+            line[i] = float(line[i])
         if time not in rawdata.keys():
             rawdata[time] = {}
         rawdata[time][id] = line[:]
@@ -296,6 +306,10 @@ for i in timeIndex:
         p = []
         for l in range(INITIAL_K):
             p.append(1.0/INITIAL_K)
+        for id in data[i]:
+            z = sample(p) + 1
+            hdp.clusterinfo.addToCluster(id, z)
+        hdp.clusterinfo.maxcluster = INITIAL_K + 1
 
     #RE-CLUSTERING
     hdp.sampling()
