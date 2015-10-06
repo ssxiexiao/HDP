@@ -174,6 +174,9 @@ class HDP:
                 if s == len(p):
                     znew = self.clusterinfo.maxcluster
                     self.clusterinfo.maxcluster += 1
+                    nu = np.random.beta(self.gama, 1.0)
+                    self.beta[znew] = self.beta_u * (1.0 - nu)
+                    self.beta_u = self.beta_u * nu
                 else:
                     znew = gk[s]
                 self.clusterinfo.addToCluster(id, znew)
