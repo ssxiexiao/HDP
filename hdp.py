@@ -2,6 +2,7 @@
 import math
 import random
 import numpy as np
+import csv
 
 class UserInfo:
 
@@ -9,6 +10,13 @@ class UserInfo:
         self.id2Attr = {}
         self.id2Indice = {}
         self.indice2Id = []
+
+    def loadData(self, data):
+        self.id2Attr = data
+        self.indice2Id = []
+        self.indice2Id.append([])
+        for id in self.id2Attr:
+            self.indice2Id[0].append[id]
 
     def getAttrById(self, id):
         attr = self.id2Attr[id][:]
@@ -50,10 +58,14 @@ class UserInfo:
     def getJ(self, j):
         return self.indice2Id[j]
 
+    def changeAttr(self, data):
+        return
+
 class ClusterInfo:
     
     def __init__(self):
         self._cluster = {}
+        self.maxcluster = 0
 
     def addToCluster(self, id, z):
         if not z in self._cluster.keys():
@@ -117,9 +129,9 @@ class Operator:
 
 class HDP:
 
-    def __init__(self):
-        self.clusterinfo = ClusterInfo()
-        self.userinfo = UserInfo()
+    def __init__(self, clusterinfo, userinfo):
+        self.clusterinfo = clusterinfo
+        self.userinfo = userinfo
 
     def sampling(self):
         maxIter = 100
@@ -152,7 +164,8 @@ class HDP:
                 p.append(result)
                 s = sampling(p)
                 if s == len(p):
-                    znew = newk
+                    znew = self.clusterinfo.maxcluster
+                    self.clusterinfo.maxcluster += 1
                 else:
                     znew = gk[s]
                 self.clusterinfo.addToCluster(id, znew)
@@ -227,9 +240,64 @@ class HDP:
             ga = np.random.gamma(kai, 1/beta)       
         self.gama = ga
         return
-    
-s = np.random.dirichlet([10, 5, 3], 1)
-s = s[0]
-print s
-s = np.random.gamma(1,2)
-print s
+ 
+#LOAD DATA
+rawdata = {}
+reader = csv.reader(file('E:\\DATA\\sever230final(fitered).csv', 'r'))
+count = 0
+title = []
+for line in reader:
+    if count == 0:
+        title = line
+        count += 1
+    else:
+        time = line[0]
+        id = line[1]
+        line = line[2:]
+        if time not in rawdata.keys():
+            rawdata[time] = {}
+        rawdata[time][id] = line[:]
+idlist = []
+count = 0
+timeIndex = rawdata.keys()
+timeIndex.sort()
+timeIndex = timeIndex[:8]
+print timeIndex
+for time in timeIndex:
+    if count == 0:
+        count += 1
+        idlist = rawdata[time].keys()
+    else:
+        newidlist = []
+        for id in idlist:
+            if id in rawdata[time].keys():
+                newidlist.append(id)
+        idlist = newidlist
+print len(idlist) 
+data = {}
+for time in timeIndex:
+    data[time] = {}
+for time in timeIndex:
+    for id in idlist:
+        data[time][id] = rawdata[time][id][:]
+
+
+userinfo = UserInfo()
+clusterinfo = ClusterInfo()
+hdp = HDP(clusterinfo, userinfo)
+count = 0
+for i in timeIndex:
+    #CHANGE ATTRIBUTE
+    hdp.userinfo.loadData(data[i])
+    if count == 0:
+        count += 1
+        #INITIAL CLUSTERING
+        INITIAL_K = 5
+        p = []
+        for l in range(INITIAL_K):
+            p.append(1.0/INITIAL_K)
+
+    #RE-CLUSTERING
+    hdp.sampling()
+
+    #OUTPUT
